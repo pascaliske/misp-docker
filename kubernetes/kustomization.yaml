@@ -8,7 +8,6 @@ resources:
 - ./manifests/mysql.yaml
 - ./manifests/services.yaml
 - ./manifests/ingress.yaml
-- ./manifests/nginx-cm.yaml
 
 secretGenerator:
   - name: instance-secrets
@@ -20,3 +19,8 @@ secretGenerator:
     literals:
       - MYSQL_DATABASE=misp
       - MYSQL_USER=misp
+
+configMapGenerator:
+  - name: nginx-config
+    envs:
+      - ./nginx-config.env

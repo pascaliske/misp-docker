@@ -73,6 +73,7 @@ export FASTCGI_READ_TIMEOUT=${FASTCGI_READ_TIMEOUT:-300s}
 export FASTCGI_SEND_TIMEOUT=${FASTCGI_SEND_TIMEOUT:-300s}
 export FASTCGI_CONNECT_TIMEOUT=${FASTCGI_CONNECT_TIMEOUT:-300s}
 
+export PHP_LISTEN_FPM=true
 export PHP_FCGI_CHILDREN=${PHP_FCGI_CHILDREN:-5}
 export PHP_FCGI_START_SERVERS=${PHP_FCGI_START_SERVERS:-2}
 export PHP_FCGI_SPARE_SERVERS=${PHP_FCGI_SPARE_SERVERS:-1}
@@ -106,6 +107,26 @@ export STUNNEL_CONFIG=${STUNNEL_CONFIG}
 export SUPERVISOR_HOST=${SUPERVISOR_HOST:-127.0.0.1}
 export SUPERVISOR_USERNAME=${SUPERVISOR_USERNAME:-supervisor}
 export SUPERVISOR_PASSWORD=${SUPERVISOR_PASSWORD:-supervisor}
+
+# error out on legacy variables
+check_deprecated_env() {
+    local fail=0
+    local msg="This variable was renamed or removed in a breaking change. See the migration notes in the README: https://github.com/misp/misp-docker"
+    local deprecated_vars=(CORE_HTTP_PORT CORE_HTTPS_PORT HSTS_MAX_AGE X_FRAME_OPTIONS CONTENT_SECURITY_POLICY)
+
+    for var in "${deprecated_vars[@]}"; do
+        if [ -n "${!var:-}" ]; then
+            echo "ERROR: ${var} is deprecated. ${msg}" >&2
+            fail=1
+        fi
+    done
+
+    if [ "$fail" -eq 1 ]; then
+        exit 1
+    fi
+}
+
+check_deprecated_env
 
 # Setting Timezone for supervisord
 update-alternatives --install /etc/localtime localtime /usr/share/zoneinfo/${TZ} 0
