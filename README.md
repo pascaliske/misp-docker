@@ -9,6 +9,7 @@ Notable features:
 
 - MISP and MISP modules are split into two different Docker images, `misp-core` and `misp-modules`
 - Optional [MISP-Guard](https://github.com/MISP/misp-guard) container to filter traffic and enforce sharing policies via mitmproxy.
+- NGINX is split into a separate Docker image ([see below](#breaking-changes); ref: [misp/misp-docker#430](https://github.com/MISP/misp-docker/pull/430))
 - Docker images are pushed regularly, no build required
 - Lightweight Docker images by using multiple build stages and a slim parent image
 - Rely on off the shelf Docker images for Exim4, Redis, and MariaDB
@@ -318,6 +319,31 @@ CUSTOM_AUTH_CUSTOM_LOGOUT=
 - If you are interested in running streamlined versions of the images (fewer dependencies, easier approval from compliance), you might want to use the `latest-slim` tag. Just adjust the `docker-compose.yml` file, and run again `docker compose pull` and `docker compose up`.
 
 
+#### Breaking changes
+
+With PR [430](https://github.com/MISP/misp-docker/pull/430) the NGINX server was extracted from the MISP core image into it's own image.
+This improves security and scalability of the front-facing NGINX server but leads to some changes described as follows:
+
+**Variables**: As part of this change, a couple of variables were changed inside `template.env`:
+
+| Previous variable         | New variable                                             |
+| ------------------------- | -------------------------------------------------------- |
+| `CORE_HTTP_PORT`          | `NGINX_HTTP_PORT`                                        |
+| `CORE_HTTPS_PORT`         | `NGINX_HTTPS_PORT`                                       |
+| `FASTCGI_STATUS_LISTEN`   | `FASTCGI_LISTEN_STATUS`                                  |
+| `HSTS_MAX_AGE`            | `NGINX_HSTS_MAX_AGE`                                     |
+| `X_FRAME_OPTIONS`         | `NGINX_X_FRAME_OPTIONS`                                  |
+| `CONTENT_SECURITY_POLICY` | `NGINX_CONTENT_SECURITY_POLICY`                          |
+|                           |                                                          |
+| `DISABLE_SSL_REDIRECT`    | Removed entirely, SSL is auto-detected via cert presence |
+
+**TLS/SSL:** The existing `./ssl` volume mount from `misp-core` is moved to the `misp-nginx` container, so existing certificates keep working.
+
+**GPG key delivery:** `gpg.asc` is now served via `misp-nginx`, which proxies the request through to `misp-core` (PHP-FPM) rather than serving a static file from the webroot path.
+
+**Kubernetes/Helm:** manifests have been updated for the new two-container topology; if you deploy via Helm/Kubernetes, review the updated chart before upgrading.
+
+
 ### High availability deployments
 
 If you want to deploy multiple `misp-core` containers behind a load balancer it is recommended that you set the following to static values in `.env` or otherwise inside the container environment as they are used in session handling, and if unset will randomly generate:
@@ -495,11 +521,11 @@ See [here](/docs/stunnel-guide.md)
 
 ## Versioning
 
-A GitHub Action builds `misp-core`, `misp-modules`, and `misp-guard` images automatically and pushes them to the [GitHub Package registry](https://github.com/orgs/MISP/packages). We do not use tags inside the repository; instead we tag images as they are pushed to the registry. For each build, `misp-core`, `misp-modules`, `misp-guard` images are tagged as follows:
+A GitHub Action builds `misp-core`, `misp-nginx`, `misp-modules`, and `misp-guard` images automatically and pushes them to the [GitHub Package registry](https://github.com/orgs/MISP/packages). We do not use tags inside the repository; instead we tag images as they are pushed to the registry. For each build, `misp-core`, `misp-modules`, `misp-guard` images are tagged as follows:
 
-- `misp-core:${commit-sha1}[0:7]`, `misp-modules:${commit-sha1}[0:7]`, and `misp-guard:${commit-sha1}[0:7]` where `${commit-sha1}` is the commit hash triggering the build
-- `misp-core:latest`, `misp-modules:latest`, and `misp-guard:latest` in order to track the latest builds available
-- `misp-core:${CORE_TAG}`, `misp-modules:${MODULES_TAG}`, and `misp-guard:${GUARD_TAG}` reflecting the underlying versions as specified inside the `template.env` file at build time.
+- `misp-core:${commit-sha1}[0:7]`, `misp-nginx:${commit-sha1}[0:7]`, `misp-modules:${commit-sha1}[0:7]`, and `misp-guard:${commit-sha1}[0:7]` where `${commit-sha1}` is the commit hash triggering the build
+- `misp-core:latest`, `misp-nginx:latest`, `misp-modules:latest`, and `misp-guard:latest` in order to track the latest builds available
+- `misp-core:${CORE_TAG}`, `misp-nginx:${CORE_TAG}`, `misp-modules:${MODULES_TAG}`, and `misp-guard:${GUARD_TAG}` reflecting the underlying versions as specified inside the `template.env` file at build time.
 
 ## Podman (experimental)
 
@@ -616,6 +642,7 @@ With **Docker**:
 docker compose down
 docker system prune
 docker image rm ghcr.io/misp/misp-docker/misp-core
+docker image rm ghcr.io/misp/misp-docker/misp-nginx
 docker image rm ghcr.io/misp/misp-docker/misp-modules
 docker image rm ghcr.io/misp/misp-docker/misp-guard
 ```
@@ -626,6 +653,7 @@ With **Podman**:
 podman compose down
 podman system prune
 podman image rm ghcr.io/misp/misp-docker/misp-core
+podman image rm ghcr.io/misp/misp-docker/misp-nginx
 podman image rm ghcr.io/misp/misp-docker/misp-modules
 podman image rm ghcr.io/misp/misp-docker/misp-guard
 ```
