@@ -61,7 +61,7 @@ docker compose version
 - `docker compose pull` if you want to use pre-built images or `docker compose build` if you want to build your own (see the [Troubleshooting](#troubleshooting) section in case of errors)
 - `docker compose up`
   - Add `-d` to run the services in the background
-- Login to `https://localhost`
+- Login to `http://localhost`
   - User: `admin@admin.test`
   - Password: `admin`
 
