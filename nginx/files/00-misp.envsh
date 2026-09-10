@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 export TZ="${TZ:-UTC}"
-export BASE_URL="${BASE_URL:-https://localhost}"
+export BASE_URL="${BASE_URL}"
 export DISABLE_IPV6="${DISABLE_IPV6:-false}"
 
 export NGINX_X_FORWARDED_FOR="${NGINX_X_FORWARDED_FOR:-false}"
