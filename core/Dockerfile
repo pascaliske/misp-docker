@@ -99,6 +99,9 @@ FROM php-base AS composer-build
 # environment
 WORKDIR /tmp
 ENV COMPOSER_ALLOW_SUPERUSER=1
+ARG CORE_TAG
+ARG CORE_COMMIT
+ARG CORE_FLAVOR
 
 # prepare composer.json
 RUN curl -o /tmp/composer.json https://raw.githubusercontent.com/MISP/MISP/${CORE_COMMIT:-${CORE_TAG}}/app/composer.json && \
@@ -130,6 +133,10 @@ FROM php-base AS php-build
 
 # environment
 ENV TZ=Etc/UTC
+ARG CORE_TAG
+ARG CORE_COMMIT
+ARG CORE_FLAVOR
+ARG PHP_API_VERSION
 
 RUN <<-EOF
     if [ "${CORE_FLAVOR}" = "slim" ]; then
@@ -186,6 +193,9 @@ EOF
 
 # --- python-build
 FROM php-base AS python-build
+ARG CORE_TAG
+ARG CORE_COMMIT
+ARG CORE_FLAVOR
 
 RUN apt-get install -y --no-install-recommends \
     gcc \
@@ -202,7 +212,7 @@ RUN <<-EOF
     else
         git clone --branch "${CORE_TAG}" --depth 1 https://github.com/MISP/MISP.git /var/www/MISP
     fi
-    cd /var/www/MISP || exit; git submodule update --init --recursive .
+    cd /var/www/MISP || exit; git submodule update --init --recursive --depth 1 .
 EOF
 
 ARG PYPI_SETUPTOOLS_VERSION
@@ -269,6 +279,9 @@ EOF
 
 # --- final stage
 FROM php-base
+ARG CORE_TAG
+ARG CORE_COMMIT
+ARG CORE_FLAVOR
 
 ENV PATH="/var/www/MISP/app/Console:${PATH}"
 
