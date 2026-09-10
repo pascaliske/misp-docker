@@ -61,7 +61,7 @@ docker compose version
 - `docker compose pull` if you want to use pre-built images or `docker compose build` if you want to build your own (see the [Troubleshooting](#troubleshooting) section in case of errors)
 - `docker compose up`
   - Add `-d` to run the services in the background
-- Login to `https://localhost`
+- Login to `http://localhost`
   - User: `admin@admin.test`
   - Password: `admin`
 
@@ -366,7 +366,11 @@ This improves security and scalability of the front-facing NGINX server but lead
 |                           |                                                          |
 | `DISABLE_SSL_REDIRECT`    | Removed entirely, SSL is auto-detected via cert presence |
 
+**Base URL:** The BASE_URL variable is now mandatory because the SSL logic is changed (see below). Please make sure it is in your environment.
+
 **TLS/SSL:** The existing `./ssl` volume mount from `misp-core` is moved to the `misp-nginx` container, so existing certificates keep working.
+
+**Certificates:** SSL is disabled if certificates are missing, but you can generate self-signed certificates with the following command: `mkdir -p ./ssl/ && openssl req -x509 -subj '/CN=localhost' -nodes -newkey rsa:4096 -keyout ssl/key.pem -out ssl/cert.pem -days 365 -addext "subjectAltName = DNS:localhost, IP:127.0.0.1, IP:::1"`
 
 **GPG key delivery:** `gpg.asc` is now served via `misp-nginx`, which proxies the request through to `misp-core` (PHP-FPM) rather than serving a static file from the webroot path.
 

@@ -122,7 +122,7 @@ services:
       interval: 2s
       timeout: 1s
       retries: 3
-      start_period: 30s
+      start_period: 60s
       start_interval: 30s
     expose:
       - 9002
@@ -139,14 +139,13 @@ services:
     # mount custom ca root certificates
     # - "./rootca.pem:/usr/local/share/ca-certificates/rootca.crt:Z"
     environment:
-      - "BASE_URL=${BASE_URL}"
+      - "BASE_URL=${BASE_URL:?The BASE_URL variable is now mandatory because the SSL logic is changed, see README.md for instructions.}"
       - "CRON_USER_ID=${CRON_USER_ID}"
       - "CRON_PULLALL=${CRON_PULLALL}"
       - "CRON_PUSHALL=${CRON_PUSHALL}"
       - "FETCH_FEED_INTERVAL=${FETCH_FEED_INTERVAL}"
       - "CACHE_FEED_INTERVAL=${CACHE_FEED_INTERVAL}"
       - "DISABLE_IPV6=${DISABLE_IPV6}"
-      - "DISABLE_SSL_REDIRECT=${DISABLE_SSL_REDIRECT}"
       - "ENABLE_DB_SETTINGS=${ENABLE_DB_SETTINGS}"
       - "AUTH_ENFORCED=${AUTH_ENFORCED}"
       - "ENABLE_BACKGROUND_UPDATES=${ENABLE_BACKGROUND_UPDATES}"
@@ -357,7 +356,7 @@ services:
       - ALL
     environment:
       - "TZ=${TZ}"
-      - "BASE_URL=${BASE_URL}"
+      - "BASE_URL=${BASE_URL:?The BASE_URL variable is now mandatory because the SSL logic is changed, see README.md for instructions.}"
       - "DISABLE_IPV6=${DISABLE_IPV6}"
       # NGINX settings
       - "NGINX_X_FORWARDED_FOR=${NGINX_X_FORWARDED_FOR}"
