@@ -80,8 +80,9 @@ EOF
 RUN groupadd -g "${MISP_GID}" misp && \
     useradd  -u "${MISP_UID}" -g "${MISP_GID}" -m -d /home/misp -s /usr/sbin/nologin misp
 
-COPY --from=python-build /wheels /wheels
-RUN pip install --no-cache-dir /wheels/*.whl && rm -rf /wheels
+RUN --mount=type=bind,from=python-build,source=/wheels,target=/wheels \
+    pip install --no-cache-dir /wheels/*.whl
+
 RUN bash -c 'mkdir -p /custom/{action_mod,expansion,export_mod,import_mod} && chown -R misp:misp /custom'
 
 USER misp
